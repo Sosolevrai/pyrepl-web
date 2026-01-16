@@ -7,6 +7,7 @@ import js  # Pyodide's bridge to JavaScript
 from pyodide.ffi import create_proxy
 
 
+
 class BrowserConsole(Console):
     def __init__(self, term):
         # term is the xterm.js Terminal instance passed from JS
@@ -117,6 +118,22 @@ browser_console = BrowserConsole(js.term)
 
 
 async def start_repl():
+    import micropip
+
+    await micropip.install("catppuccin[pygments]")
+
+    from pygments import highlight
+    from pygments.lexers import Python3Lexer
+    from pygments.formatters import Terminal256Formatter
+
+    lexer = Python3Lexer()
+    formatter = Terminal256Formatter(style="catppuccin-mocha")
+
+    def syntax_highlight(code):
+        if not code:
+            return ""
+        result = highlight(code, lexer, formatter)
+        return result.rstrip('\n')
 
     class TermWriter:
         def write(self, data):
@@ -237,9 +254,14 @@ async def start_repl():
                 current_line = ""
                 browser_console.term.write("\x1b[32m>>> \x1b[0m")
         elif char == "\x7f":
-            if current_line:
-                current_line = current_line[:-1]
-                browser_console.term.write("\b \b")
+                if current_line:
+                    current_line = current_line[:-1]
+                    browser_console.term.write('\r\x1b[K')
+                    prompt = "\x1b[32m>>> \x1b[0m" if len(lines) == 0 else "\x1b[32m... \x1b[0m"
+                    browser_console.term.write(prompt + syntax_highlight(current_line))
         else:
             current_line += char
-            browser_console.term.write(char)                   
+            # Clear line and rewrite with highlighting
+            browser_console.term.write('\r\x1b[K')  # Go to start, clear line
+            prompt = "\x1b[32m>>> \x1b[0m" if len(lines) == 0 else "\x1b[32m... \x1b[0m"
+            browser_console.term.write(prompt + syntax_highlight(current_line))              

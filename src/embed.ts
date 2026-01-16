@@ -69,6 +69,7 @@ async function createRepl(container: HTMLElement) {
     term.write('Loading Pyodide...\r\n');
 
     const pyodide = await getPyodide();
+    await pyodide.loadPackage("micropip");
 
     // Expose terminal to Python
     (globalThis as any).term = term;
@@ -79,10 +80,7 @@ async function createRepl(container: HTMLElement) {
     pyodide.runPython(consoleCode);
 
     // Start the REPL
-    pyodide.runPythonAsync(`
-    import asyncio
-    asyncio.ensure_future(start_repl())
-`);
+    pyodide.runPythonAsync('await start_repl()');
 
     // Get the BrowserConsole class
     const browserConsole = pyodide.globals.get('browser_console');

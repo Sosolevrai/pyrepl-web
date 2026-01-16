@@ -59,7 +59,6 @@ class BrowserConsole(Console):
         self.event_queue.clear()
 
     def push_char(self, char):
-        js.console.log(f"Pushing char: {char}")
         self.event_queue.append(char)
 
         if self._resolve_input:
@@ -84,9 +83,6 @@ class BrowserConsole(Console):
         return len(self.event_queue) > 0
 
     async def get_event(self, block=True):
-        js.console.log(
-            f"Getting event, block={block}, queue size={len(self.event_queue)}"
-        )
         if not block and not self.event_queue:
             return None
 
@@ -99,7 +95,6 @@ class BrowserConsole(Console):
             await promise
 
         char = self.event_queue.popleft()
-        js.console.log(f"Got char: {char}")
         if isinstance(char, int):
             char_str = chr(char)
             raw = bytes([char])
@@ -107,7 +102,6 @@ class BrowserConsole(Console):
             char_str = char
             raw = char.encode(self.encoding)
         event = Event("key", char_str, raw)
-        js.console.log(f"Returning event: {event}")
         return event
 
     def repaint(self):
@@ -119,6 +113,8 @@ browser_console = BrowserConsole(js.term)
 
 async def start_repl():
     import micropip
+    import rlcompleter
+    import re
 
     await micropip.install("catppuccin[pygments]")
 
@@ -127,7 +123,8 @@ async def start_repl():
     from pygments.formatters import Terminal256Formatter
 
     lexer = Python3Lexer()
-    formatter = Terminal256Formatter(style="catppuccin-mocha")
+    theme_name = getattr(js, "pyreplTheme", "catppuccin-mocha")
+    formatter = Terminal256Formatter(style=theme_name)
 
     def syntax_highlight(code):
         if not code:
@@ -152,6 +149,25 @@ async def start_repl():
     sys.displayhook = displayhook
 
     repl_globals = {"__builtins__": __builtins__}
+    completer = rlcompleter.Completer(repl_globals)
+
+    def get_completions(text):
+        """Get all completions for the given text."""
+        completions = []
+        i = 0
+        while True:
+            c = completer.complete(text, i)
+            if c is None:
+                break
+            completions.append(c)
+            i += 1
+        return completions
+
+    def get_word_to_complete(line):
+        """Extract the word to complete from the end of the line."""
+        match = re.search(r'[\w.]*$', line)
+        return match.group(0) if match else ""
+
     browser_console.term.write("\x1b[32m>>> \x1b[0m")
     lines = []
     current_line = ""
@@ -195,11 +211,9 @@ async def start_repl():
 
         if char == '\r':
             browser_console.term.write("\r\n")
-            js.console.log(f"Before append, lines: {repr(lines)}, current_line: {repr(current_line)}")
 
             lines.append(current_line)
             source = "\n".join(lines)
-            js.console.log(f"Source: {repr(source)}")
 
             if not source.strip():
                 lines = []
@@ -229,15 +243,19 @@ async def start_repl():
                 code = compile_command(source, "<console>", "single")
                 if code is None:
                     # Incomplete — need more input
-                    browser_console.term.write("\x1b[32m... \x1b[0m    ")
-                    current_line = "    "
+                    prev_line = lines[-1] if lines else current_line
+                    indent = len(prev_line) - len(prev_line.lstrip())
+                    if prev_line.rstrip().endswith(':'):
+                        indent += 4
+                    browser_console.term.write("\x1b[32m... \x1b[0m" + " " * indent)
+                    current_line = " " * indent
                 else:
                     # Complete code, execute it
+                    if source.strip():
+                        history.append(source)
+                        history_index = len(history)
                     try:
                         exec(code, repl_globals)
-                        if source.strip():
-                            history.append(source)
-                            history_index = len(history)
                     except Exception as e:
                         browser_console.term.write(f"\x1b[31m{type(e).__name__}: {e}\x1b[0m\r\n")
                     lines = []
@@ -253,12 +271,37 @@ async def start_repl():
                 lines = []
                 current_line = ""
                 browser_console.term.write("\x1b[32m>>> \x1b[0m")
-        elif char == "\x7f":
-                if current_line:
-                    current_line = current_line[:-1]
+        elif char == '\t':
+            # Tab completion
+            word = get_word_to_complete(current_line)
+            if word:
+                completions = get_completions(word)
+                if len(completions) == 1:
+                    # Single match - complete it
+                    completion = completions[0]
+                    current_line = current_line[:-len(word)] + completion
                     browser_console.term.write('\r\x1b[K')
                     prompt = "\x1b[32m>>> \x1b[0m" if len(lines) == 0 else "\x1b[32m... \x1b[0m"
                     browser_console.term.write(prompt + syntax_highlight(current_line))
+                elif len(completions) > 1:
+                    # Multiple matches - show them in columns
+                    browser_console.term.write('\r\n')
+                    max_len = max(len(c) for c in completions) + 2
+                    cols = max(1, browser_console.term.cols // max_len)
+                    for i, c in enumerate(completions):
+                        browser_console.term.write(c.ljust(max_len))
+                        if (i + 1) % cols == 0:
+                            browser_console.term.write('\r\n')
+                    if len(completions) % cols != 0:
+                        browser_console.term.write('\r\n')
+                    prompt = "\x1b[32m>>> \x1b[0m" if len(lines) == 0 else "\x1b[32m... \x1b[0m"
+                    browser_console.term.write(prompt + syntax_highlight(current_line))
+        elif char == "\x7f":
+            if current_line:
+                current_line = current_line[:-1]
+                browser_console.term.write('\r\x1b[K')
+                prompt = "\x1b[32m>>> \x1b[0m" if len(lines) == 0 else "\x1b[32m... \x1b[0m"
+                browser_console.term.write(prompt + syntax_highlight(current_line))
         else:
             current_line += char
             # Clear line and rewrite with highlighting

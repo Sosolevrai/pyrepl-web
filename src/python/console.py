@@ -10,7 +10,6 @@ PS1 = "\x1b[32m>>> \x1b[0m"
 PS2 = "\x1b[32m... \x1b[0m"
 
 
-
 class BrowserConsole(Console):
     def __init__(self, term):
         # term is the xterm.js Terminal instance passed from JS
@@ -133,20 +132,21 @@ async def start_repl():
         if not code:
             return ""
         result = highlight(code, lexer, formatter)
-        return result.rstrip('\n')
+        return result.rstrip("\n")
 
     class TermWriter:
         def write(self, data):
-            browser_console.term.write(data.replace('\n', '\r\n'))
+            browser_console.term.write(data.replace("\n", "\r\n"))
+
         def flush(self):
             pass
-    
+
     sys.stdout = TermWriter()
     sys.stderr = TermWriter()
 
     def displayhook(value):
         if value is not None:
-            repl_globals['_'] = value
+            repl_globals["_"] = value
             browser_console.term.write(repr(value) + "\r\n")
 
     sys.displayhook = displayhook
@@ -159,25 +159,35 @@ async def start_repl():
     class Exit:
         def __repr__(self):
             return "exit is not available in the browser"
+
         def __call__(self):
             browser_console.term.write("exit is not available in the browser\r\n")
 
     global repl_globals
-    repl_globals = {"__builtins__": __builtins__, "clear": clear, "exit": Exit(), "quit": Exit()}
+    repl_globals = {
+        "__builtins__": __builtins__,
+        "clear": clear,
+        "exit": Exit(),
+        "quit": Exit(),
+    }
     completer = rlcompleter.Completer(repl_globals)
 
     # Run startup script if one was provided (silently, just to populate namespace)
-    startup_script = getattr(js, 'pyreplStartupScript', None)
+    startup_script = getattr(js, "pyreplStartupScript", None)
     if startup_script:
         try:
             # Temporarily suppress stdout/stderr during startup
             old_stdout, old_stderr = sys.stdout, sys.stderr
-            sys.stdout = sys.stderr = type('null', (), {'write': lambda s, x: None, 'flush': lambda s: None})()
+            sys.stdout = sys.stderr = type(
+                "null", (), {"write": lambda s, x: None, "flush": lambda s: None}
+            )()
             exec(startup_script, repl_globals)
             sys.stdout, sys.stderr = old_stdout, old_stderr
         except Exception as e:
             sys.stdout, sys.stderr = old_stdout, old_stderr
-            browser_console.term.write(f"\x1b[31mStartup script error - {type(e).__name__}: {e}\x1b[0m\r\n")
+            browser_console.term.write(
+                f"\x1b[31mStartup script error - {type(e).__name__}: {e}\x1b[0m\r\n"
+            )
 
     def get_completions(text):
         """Get all completions for the given text."""
@@ -193,11 +203,11 @@ async def start_repl():
 
     def get_word_to_complete(line):
         """Extract the word to complete from the end of the line."""
-        match = re.search(r'[\w.]*$', line)
+        match = re.search(r"[\w.]*$", line)
         return match.group(0) if match else ""
 
     # In readonly mode, don't show prompt or accept input
-    if getattr(js, 'pyreplReadonly', False):
+    if getattr(js, "pyreplReadonly", False):
         return
 
     browser_console.term.write(PS1)
@@ -213,7 +223,7 @@ async def start_repl():
             continue
 
         char = event.data
-        if char == '\x03':
+        if char == "\x03":
             # Ctrl+C - interrupt/cancel current input
             browser_console.term.write("^C\r\n")
             lines = []
@@ -222,45 +232,57 @@ async def start_repl():
             browser_console.term.write(PS1)
             continue
 
-        if char == '\x0c':
+        if char == "\x0c":
             # Ctrl+L - clear screen
             clear()
             browser_console.term.write(PS1 + syntax_highlight(current_line))
             continue
 
-        if char == '\x1b':
+        if char == "\x1b":
             # Might be an arrow key
             event2 = await browser_console.get_event(block=True)
-            if event2 and event2.data == '[':
+            if event2 and event2.data == "[":
                 event3 = await browser_console.get_event(block=True)
                 if event3:
-                    if event3.data == 'A':
+                    if event3.data == "A":
                         # Up arrow
                         if history:
                             history_index = max(0, history_index - 1)
                             # Clear current line
-                            browser_console.term.write('\r\x1b[K')
+                            browser_console.term.write("\r\x1b[K")
                             hist_entry = history[history_index]
                             # For multiline entries, only show first line
-                            current_line = hist_entry.split('\n')[0] if '\n' in hist_entry else hist_entry
-                            browser_console.term.write(PS1 + syntax_highlight(current_line))
-                    elif event3.data == 'B':
+                            current_line = (
+                                hist_entry.split("\n")[0]
+                                if "\n" in hist_entry
+                                else hist_entry
+                            )
+                            browser_console.term.write(
+                                PS1 + syntax_highlight(current_line)
+                            )
+                    elif event3.data == "B":
                         # Down arrow
                         if history:
                             history_index = min(len(history), history_index + 1)
                             # Clear current line
-                            browser_console.term.write('\r\x1b[K')
+                            browser_console.term.write("\r\x1b[K")
                             if history_index < len(history):
                                 hist_entry = history[history_index]
                                 # For multiline entries, only show first line
-                                current_line = hist_entry.split('\n')[0] if '\n' in hist_entry else hist_entry
+                                current_line = (
+                                    hist_entry.split("\n")[0]
+                                    if "\n" in hist_entry
+                                    else hist_entry
+                                )
                             else:
                                 current_line = ""
-                            browser_console.term.write(PS1 + syntax_highlight(current_line))
+                            browser_console.term.write(
+                                PS1 + syntax_highlight(current_line)
+                            )
                     # Left and Right arrows can be implemented similarly
             continue
 
-        if char == '\r':
+        if char == "\r":
             browser_console.term.write("\r\n")
 
             lines.append(current_line)
@@ -286,19 +308,21 @@ async def start_repl():
                 except SystemExit:
                     pass
                 except Exception as e:
-                    browser_console.term.write(f"\x1b[31m{type(e).__name__}: {e}\x1b[0m\r\n")
+                    browser_console.term.write(
+                        f"\x1b[31m{type(e).__name__}: {e}\x1b[0m\r\n"
+                    )
                 lines = []
                 current_line = ""
                 browser_console.term.write(PS1)
                 continue
-            
+
             try:
                 code = compile_command(source, "<console>", "single")
                 if code is None:
                     # Incomplete — need more input
                     prev_line = lines[-1] if lines else current_line
                     indent = len(prev_line) - len(prev_line.lstrip())
-                    if prev_line.rstrip().endswith(':'):
+                    if prev_line.rstrip().endswith(":"):
                         indent += 4
                     browser_console.term.write(PS2 + " " * indent)
                     current_line = " " * indent
@@ -312,7 +336,9 @@ async def start_repl():
                     except SystemExit:
                         pass
                     except Exception as e:
-                        browser_console.term.write(f"\x1b[31m{type(e).__name__}: {e}\x1b[0m\r\n")
+                        browser_console.term.write(
+                            f"\x1b[31m{type(e).__name__}: {e}\x1b[0m\r\n"
+                        )
                     lines = []
                     current_line = ""
                     browser_console.term.write(PS1)
@@ -326,7 +352,7 @@ async def start_repl():
                 lines = []
                 current_line = ""
                 browser_console.term.write(PS1)
-        elif char == '\t':
+        elif char == "\t":
             # Tab completion
             word = get_word_to_complete(current_line)
             if word:
@@ -334,32 +360,32 @@ async def start_repl():
                 if len(completions) == 1:
                     # Single match - complete it
                     completion = completions[0]
-                    current_line = current_line[:-len(word)] + completion
-                    browser_console.term.write('\r\x1b[K')
+                    current_line = current_line[: -len(word)] + completion
+                    browser_console.term.write("\r\x1b[K")
                     prompt = PS1 if len(lines) == 0 else PS2
                     browser_console.term.write(prompt + syntax_highlight(current_line))
                 elif len(completions) > 1:
                     # Multiple matches - show them in columns
-                    browser_console.term.write('\r\n')
+                    browser_console.term.write("\r\n")
                     max_len = max(len(c) for c in completions) + 2
                     cols = max(1, browser_console.term.cols // max_len)
                     for i, c in enumerate(completions):
                         browser_console.term.write(c.ljust(max_len))
                         if (i + 1) % cols == 0:
-                            browser_console.term.write('\r\n')
+                            browser_console.term.write("\r\n")
                     if len(completions) % cols != 0:
-                        browser_console.term.write('\r\n')
+                        browser_console.term.write("\r\n")
                     prompt = PS1 if len(lines) == 0 else PS2
                     browser_console.term.write(prompt + syntax_highlight(current_line))
         elif char == "\x7f":
             if current_line:
                 current_line = current_line[:-1]
-                browser_console.term.write('\r\x1b[K')
+                browser_console.term.write("\r\x1b[K")
                 prompt = PS1 if len(lines) == 0 else PS2
                 browser_console.term.write(prompt + syntax_highlight(current_line))
         else:
             current_line += char
             # Clear line and rewrite with highlighting
-            browser_console.term.write('\r\x1b[K')  # Go to start, clear line
+            browser_console.term.write("\r\x1b[K")  # Go to start, clear line
             prompt = PS1 if len(lines) == 0 else PS2
-            browser_console.term.write(prompt + syntax_highlight(current_line))              
+            browser_console.term.write(prompt + syntax_highlight(current_line))

@@ -1,6 +1,6 @@
 {
   "name": "pyrepl-web",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "An embeddable Python REPL powered by Pyodide",
   "main": "dist/pyrepl.js",
   "files": [

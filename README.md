@@ -2,6 +2,8 @@
 
 An embeddable Python REPL, powered by Pyodide.
 
+[Live demo](https://savannah.dev/projects/)
+
 ## Getting started
 
 Add a `.pyrepl` div and include the script from a CDN:

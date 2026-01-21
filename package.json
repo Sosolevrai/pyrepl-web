@@ -1,6 +1,6 @@
 {
   "name": "pyrepl-web",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "An embeddable Python REPL powered by Pyodide",
   "main": "dist/pyrepl.js",
   "files": [
@@ -24,7 +24,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/savannahostrowski/pyrepl-web"
+    "url": "git+https://github.com/savannahostrowski/pyrepl-web.git"
   },
   "type": "module",
   "devDependencies": {

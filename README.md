@@ -47,6 +47,7 @@ Supports...
 - Tab completion
 - Command history (up/down arrows)
 - Smart indentation
+- Keyboard shortcuts (Ctrl+L clear, Ctrl+C cancel)
 - Preload any PyPI packages
 - Multiple color themes (Catppuccin Mocha/Latte)
 

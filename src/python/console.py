@@ -206,6 +206,21 @@ async def start_repl():
             continue
 
         char = event.data
+        if char == '\x03':
+            # Ctrl+C - interrupt/cancel current input
+            browser_console.term.write("^C\r\n")
+            lines = []
+            current_line = ""
+            history_index = len(history)
+            browser_console.term.write("\x1b[32m>>> \x1b[0m")
+            continue
+
+        if char == '\x0c':
+            # Ctrl+L - clear screen
+            clear()
+            browser_console.term.write("\x1b[32m>>> \x1b[0m" + syntax_highlight(current_line))
+            continue
+
         if char == '\x1b':
             # Might be an arrow key
             event2 = await browser_console.get_event(block=True)

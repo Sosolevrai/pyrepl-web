@@ -20,8 +20,18 @@ const server = Bun.serve({
         return new Response(Bun.file("src/python/console.py"), {
             headers: { "Content-Type": "text/plain" },
         });
+    }
+
+    // Serve .py files from examples directory
+    if (url.pathname.endsWith(".py")) {
+        const file = Bun.file(`examples${url.pathname}`);
+        if (await file.exists()) {
+            return new Response(file, {
+                headers: { "Content-Type": "text/plain" },
+            });
         }
-    
+    }
+
     return new Response("Not found", { status: 404 });
   },
 });

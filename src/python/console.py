@@ -159,8 +159,22 @@ async def start_repl():
         def __call__(self):
             browser_console.term.write("exit is not available in the browser\r\n")
 
+    global repl_globals
     repl_globals = {"__builtins__": __builtins__, "clear": clear, "exit": Exit(), "quit": Exit()}
     completer = rlcompleter.Completer(repl_globals)
+
+    # Run startup script if one was provided (silently, just to populate namespace)
+    startup_script = getattr(js, 'pyreplStartupScript', None)
+    if startup_script:
+        try:
+            # Temporarily suppress stdout/stderr during startup
+            old_stdout, old_stderr = sys.stdout, sys.stderr
+            sys.stdout = sys.stderr = type('null', (), {'write': lambda s, x: None, 'flush': lambda s: None})()
+            exec(startup_script, repl_globals)
+            sys.stdout, sys.stderr = old_stdout, old_stderr
+        except Exception as e:
+            sys.stdout, sys.stderr = old_stdout, old_stderr
+            browser_console.term.write(f"\x1b[31mStartup script error - {type(e).__name__}: {e}\x1b[0m\r\n")
 
     def get_completions(text):
         """Get all completions for the given text."""

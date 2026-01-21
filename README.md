@@ -35,6 +35,9 @@ Configure via `data-*` attributes:
      data-theme="catppuccin-latte"
      data-packages="pydantic, requests">
 </div>
+
+<!-- Load and run a Python script on startup -->
+<div class="pyrepl" data-src="/scripts/demo.py"></div>
 ```
 
 Supports...
@@ -56,6 +59,7 @@ Supports...
 | `data-packages` | Comma-separated list of PyPI packages to preload | none |
 | `data-buttons` | Show copy/clear buttons in header (`true` or `false`) | `true` |
 | `data-title` | Custom title in the header bar | `python` |
+| `data-src` | Path to a Python script to preload (runs silently, populates namespace) | none |
 
 ### Custom Themes
 
@@ -140,6 +144,7 @@ window.pyreplThemes = {
 | `brightBlack`, `brightRed`, ... `brightWhite` | Bright ANSI color variants |
 | `headerBackground` | (Optional) Header bar background, defaults to `black` |
 | `headerTitle` | (Optional) Header title text color, defaults to `brightBlack` |
+| `shadow` | (Optional) Box shadow CSS value |
 
 ### Hugo Shortcode
 

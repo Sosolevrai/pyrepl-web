@@ -339,6 +339,22 @@ async function createRepl(container: HTMLElement) {
     (globalThis as any).pyreplTheme = themeName;
     (globalThis as any).pyreplInfo = infoLine;
 
+    // Pre-fetch startup script if specified (before starting REPL)
+    const scriptSrc = container.dataset.src;
+    if (scriptSrc) {
+        try {
+            const scriptResponse = await fetch(scriptSrc);
+            if (scriptResponse.ok) {
+                const code = await scriptResponse.text();
+                (globalThis as any).pyreplStartupScript = code;
+            } else {
+                console.warn(`pyrepl-web: failed to fetch script from ${scriptSrc}`);
+            }
+        } catch (e) {
+            console.warn(`pyrepl-web: error fetching script from ${scriptSrc}`, e);
+        }
+    }
+
     // Load the browser console code
     const response = await fetch('/python/console.py');
     const consoleCode = await response.text();

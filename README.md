@@ -2,7 +2,7 @@
 
 An embeddable Python REPL, powered by Pyodide.
 
-[Live demo](https://savannah.dev/projects/)
+[Live demo](https://playground.fastapicloud.dev/)
 
 ## Getting started
 

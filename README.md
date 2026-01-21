@@ -1,18 +1,8 @@
 # pyrepl-web
 
-An embeddable Python REPL powered by Pyodide.
+An embeddable Python REPL, powered by Pyodide.
 
-## Features
-
-- Full Python 3.13 running in the browser via WebAssembly
-- Syntax highlighting with Pygments
-- Tab completion
-- Command history (up/down arrows)
-- Smart indentation
-- Preload any PyPI packages
-- Multiple color themes (Catppuccin Mocha/Latte)
-
-## Usage
+## Getting started
 
 Add a `.pyrepl` div and include the script from a CDN:
 
@@ -45,12 +35,39 @@ Configure via `data-*` attributes:
 </div>
 ```
 
+Supports...
+
+- Full Python 3.13 running in the browser via WebAssembly
+- Syntax highlighting with Pygments
+- Tab completion
+- Command history (up/down arrows)
+- Smart indentation
+- Preload any PyPI packages
+- Multiple color themes (Catppuccin Mocha/Latte)
+
 ### Attributes
 
 | Attribute | Description | Default |
 |-----------|-------------|---------|
 | `data-theme` | Color theme (`catppuccin-mocha` or `catppuccin-latte`) | `catppuccin-mocha` |
 | `data-packages` | Comma-separated list of PyPI packages to preload | none |
+
+### Hugo Shortcode
+
+Create `layouts/shortcodes/pyrepl.html`:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/pyrepl-web/dist/pyrepl.js"></script>
+<div class="pyrepl" {{ with .Get "theme" }}data-theme="{{ . }}"{{ end }} {{ with .Get "packages" }}data-packages="{{ . }}"{{ end }}></div>
+```
+
+Then use it in any markdown file:
+
+```markdown
+{{</* pyrepl */>}}
+{{</* pyrepl theme="catppuccin-latte" */>}}
+{{</* pyrepl packages="numpy, pandas" */>}}
+```
 
 ## Development
 

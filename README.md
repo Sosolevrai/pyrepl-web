@@ -6,7 +6,7 @@ An embeddable Python REPL, powered by Pyodide.
 
 ## Getting started
 
-Add a `.pyrepl` div and include the script from a CDN:
+Add a `.pyrepl` div and include the script:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/pyrepl-web/dist/pyrepl.js"></script>

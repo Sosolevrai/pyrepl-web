@@ -1,6 +1,6 @@
 # pyrepl-web
 
-An embeddable web-based Python REPL, powered by Pyodide.
+An embeddable Python REPL powered by Pyodide.
 
 ## Features
 

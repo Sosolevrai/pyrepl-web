@@ -185,7 +185,7 @@ bun run build.ts
 ## How it works
 
 pyrepl-web uses:
-- [Pyodide](https://pyodide.org/) - Python compiled to WebAssembly
+- [Pyodide](https://pyodide.org/) - CPython port to WebAssembly
 - [xterm.js](https://xtermjs.org/) - Terminal emulator
 - [Pygments](https://pygments.org/) - Syntax highlighting
 - [Catppuccin](https://github.com/catppuccin/catppuccin) - Color themes

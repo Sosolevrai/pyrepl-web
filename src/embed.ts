@@ -460,7 +460,7 @@ async function setup() {
     }
 
     // Create all terminals first (fast, shows backgrounds immediately)
-    const repls = [...containers].map(container => ({
+    const repls = Array.from(containers).map(container => ({
         container,
         ...createTerminal(container)
     }));

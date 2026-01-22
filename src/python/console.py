@@ -114,7 +114,13 @@ async def start_repl():
     # Create a new console for this terminal instance
     browser_console = BrowserConsole(js.term)
 
-    # Expose to JS so it can send input
+    # Capture startup script before JS moves to next REPL and overwrites it
+    startup_script = getattr(js, "pyreplStartupScript", None)
+    theme_name = getattr(js, "pyreplTheme", "catppuccin-mocha")
+    info_line = getattr(js, "pyreplInfo", "Python 3.13 (Pyodide)")
+    readonly = getattr(js, "pyreplReadonly", False)
+
+    # Expose to JS so it can send input (signals JS can proceed to next REPL)
     js.currentBrowserConsole = browser_console
 
     import micropip
@@ -128,7 +134,6 @@ async def start_repl():
     from pygments.formatters import Terminal256Formatter
 
     lexer = Python3Lexer()
-    theme_name = getattr(js, "pyreplTheme", "catppuccin-mocha")
     formatter = Terminal256Formatter(style=theme_name)
 
     def syntax_highlight(code):
@@ -169,8 +174,7 @@ async def start_repl():
 
     def clear():
         browser_console.clear()
-        info = getattr(js, "pyreplInfo", "Python 3.13 (Pyodide)")
-        browser_console.term.write(f"\x1b[90m{info}\x1b[0m\r\n")
+        browser_console.term.write(f"\x1b[90m{info_line}\x1b[0m\r\n")
 
     class Exit:
         def __repr__(self):
@@ -188,7 +192,6 @@ async def start_repl():
     completer = rlcompleter.Completer(repl_globals)
 
     # Run startup script if one was provided (silently, just to populate namespace)
-    startup_script = getattr(js, "pyreplStartupScript", None)
     if startup_script:
         try:
             # Temporarily suppress stdout/stderr during startup
@@ -222,7 +225,7 @@ async def start_repl():
         return match.group(0) if match else ""
 
     # In readonly mode, don't show prompt or accept input
-    if getattr(js, "pyreplReadonly", False):
+    if readonly:
         return
 
     browser_console.term.write(PS1)

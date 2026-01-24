@@ -14,8 +14,8 @@ const tsSource = readFileSync("src/embed.ts", "utf-8");
 const inlinedSource =
   `import { CONSOLE_PY } from './console-code';\n` +
   tsSource.replace(
-    /const consoleCode = await fetch\('\/python\/console\.py'\)\.then\(r => r\.text\(\)\);/,
-    `const consoleCode = CONSOLE_PY;`,
+    /function getConsoleCode\(\): Promise<string> \{\s+if \(!consoleCodePromise\) \{\s+consoleCodePromise = fetch\("\/python\/console\.py"\)\.then\(\(r\) => r\.text\(\)\);\s+\}\s+return consoleCodePromise;\s+\}/,
+    `function getConsoleCode(): Promise<string> {\n  if (!consoleCodePromise) {\n    consoleCodePromise = Promise.resolve(CONSOLE_PY);\n  }\n  return consoleCodePromise;\n}`,
   );
 
 // Write temporary file

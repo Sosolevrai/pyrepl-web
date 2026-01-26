@@ -27,6 +27,9 @@ const result = await Bun.build({
   outdir: "dist",
   naming: "pyrepl.js",
   minify: true,
+  splitting: true, // Enable code splitting for dynamic imports
+  target: "browser",
+  format: "esm", // Use ES modules for better tree-shaking
 });
 
 if (result.success) {

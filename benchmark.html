@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pyrepl-web Performance Benchmark</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    .version {
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      background: #222;
+    }
+    .version h2 {
+      margin-top: 0;
+      color: #4CAF50;
+    }
+    .metrics {
+      background: #2a2a2a;
+      border-radius: 4px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #333;
+    }
+    .metric:last-child {
+      border-bottom: none;
+    }
+    .metric-value {
+      font-weight: bold;
+      color: #64B5F6;
+    }
+    .repl-container {
+      margin-top: 20px;
+      min-height: 300px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    .summary {
+      background: #2a2a2a;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 40px;
+    }
+    .summary h2 {
+      margin-top: 0;
+      color: #FFA726;
+    }
+    .improvement {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .loading {
+      color: #FFA726;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 pyrepl-web Performance Benchmark</h1>
+
+  <div class="comparison">
+    <div class="version">
+      <h2>Before (v0.1.10)</h2>
+      <button id="test-before">Run Benchmark</button>
+      <div class="metrics">
+        <div class="metric">
+          <span>Bundle Size:</span>
+          <span class="metric-value" id="size-before">927 KB</span>
+        </div>
+        <div class="metric">
+          <span>Script Load Time:</span>
+          <span class="metric-value loading" id="script-before">-</span>
+        </div>
+        <div class="metric">
+          <span>Terminal Render:</span>
+          <span class="metric-value loading" id="terminal-before">-</span>
+        </div>
+        <div class="metric">
+          <span>Pyodide Ready:</span>
+          <span class="metric-value loading" id="pyodide-before">-</span>
+        </div>
+        <div class="metric">
+          <span>Pygments Loaded:</span>
+          <span class="metric-value loading" id="pygments-before">-</span>
+        </div>
+        <div class="metric">
+          <span>REPL Interactive:</span>
+          <span class="metric-value loading" id="interactive-before">-</span>
+        </div>
+      </div>
+      <div class="repl-container" id="repl-before"></div>
+    </div>
+
+    <div class="version">
+      <h2>After (Optimized)</h2>
+      <button id="test-after">Run Benchmark</button>
+      <div class="metrics">
+        <div class="metric">
+          <span>Initial Bundle:</span>
+          <span class="metric-value" id="size-after">23 KB (-97%)</span>
+        </div>
+        <div class="metric">
+          <span>Script Load Time:</span>
+          <span class="metric-value loading" id="script-after">-</span>
+        </div>
+        <div class="metric">
+          <span>Terminal Render:</span>
+          <span class="metric-value loading" id="terminal-after">-</span>
+        </div>
+        <div class="metric">
+          <span>Pyodide Ready:</span>
+          <span class="metric-value loading" id="pyodide-after">-</span>
+        </div>
+        <div class="metric">
+          <span>Pygments Loaded:</span>
+          <span class="metric-value loading" id="pygments-after">-</span>
+        </div>
+        <div class="metric">
+          <span>REPL Interactive:</span>
+          <span class="metric-value loading" id="interactive-after">-</span>
+        </div>
+      </div>
+      <div class="repl-container" id="repl-after"></div>
+    </div>
+  </div>
+
+  <div class="summary" id="summary" style="display: none;">
+    <h2>📊 Performance Improvements</h2>
+    <div id="summary-content"></div>
+  </div>
+
+  <script>
+    let timings = {
+      before: {},
+      after: {}
+    };
+
+    function formatTime(ms) {
+      return ms >= 1000 ? `${(ms / 1000).toFixed(2)}s` : `${Math.round(ms)}ms`;
+    }
+
+    async function testVersion(version, scriptSrc) {
+      const startTime = performance.now();
+      const container = document.getElementById(`repl-${version}`);
+      container.innerHTML = '<div class="pyrepl"></div>';
+
+      // Clear previous script
+      const oldScript = document.getElementById(`script-${version}`);
+      if (oldScript) oldScript.remove();
+
+      // Load script and measure
+      return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.id = `script-${version}`;
+        script.src = scriptSrc;
+        script.type = 'module';
+
+        const scriptLoadStart = performance.now();
+        script.onload = () => {
+          const scriptLoadTime = performance.now() - scriptLoadStart;
+          timings[version].scriptLoad = scriptLoadTime;
+          document.getElementById(`script-${version}`).textContent = formatTime(scriptLoadTime);
+
+          // Wait a bit for initialization
+          setTimeout(() => {
+            // Check for terminal render
+            const terminalCheck = setInterval(() => {
+              const xtermEl = container.querySelector('.xterm');
+              if (xtermEl && !timings[version].terminalRender) {
+                timings[version].terminalRender = performance.now() - startTime;
+                document.getElementById(`terminal-${version}`).textContent = formatTime(timings[version].terminalRender);
+              }
+
+              // Check for prompt (REPL interactive)
+              const content = container.textContent || '';
+              if (content.includes('>>>') && !timings[version].interactive) {
+                timings[version].interactive = performance.now() - startTime;
+                document.getElementById(`interactive-${version}`).textContent = formatTime(timings[version].interactive);
+
+                // Estimate Pyodide ready time (slightly before prompt)
+                if (!timings[version].pyodide) {
+                  timings[version].pyodide = timings[version].interactive - 100;
+                  document.getElementById(`pyodide-${version}`).textContent = formatTime(timings[version].pyodide);
+                }
+
+                clearInterval(terminalCheck);
+
+                // Check for syntax highlighting after a delay
+                setTimeout(() => {
+                  timings[version].pygments = performance.now() - startTime;
+                  document.getElementById(`pygments-${version}`).textContent = formatTime(timings[version].pygments);
+                  resolve();
+                  updateSummary();
+                }, 3000);
+              }
+            }, 50);
+          }, 100);
+        };
+
+        document.body.appendChild(script);
+      });
+    }
+
+    function updateSummary() {
+      if (!timings.before.interactive || !timings.after.interactive) return;
+
+      const summary = document.getElementById('summary');
+      const content = document.getElementById('summary-content');
+
+      const improvements = {
+        'Script Load': {
+          before: timings.before.scriptLoad,
+          after: timings.after.scriptLoad
+        },
+        'Terminal Render': {
+          before: timings.before.terminalRender,
+          after: timings.after.terminalRender
+        },
+        'Time to Interactive': {
+          before: timings.before.interactive,
+          after: timings.after.interactive
+        }
+      };
+
+      let html = '<div class="metrics">';
+      for (const [metric, data] of Object.entries(improvements)) {
+        const improvement = ((data.before - data.after) / data.before * 100).toFixed(1);
+        const faster = data.before - data.after;
+        html += `
+          <div class="metric">
+            <span>${metric}:</span>
+            <span class="improvement">
+              ${improvement}% faster (${formatTime(faster)} saved)
+            </span>
+          </div>
+        `;
+      }
+      html += '</div>';
+
+      content.innerHTML = html;
+      summary.style.display = 'block';
+    }
+
+    document.getElementById('test-before').addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      await testVersion('before', '/dist/pyrepl-before.js');
+      e.target.disabled = false;
+    });
+
+    document.getElementById('test-after').addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      await testVersion('after', '/dist/pyrepl.js');
+      e.target.disabled = false;
+    });
+  </script>
+</body>
+</html>

@@ -1,6 +1,8 @@
+import type { ITerminalOptions, ITheme } from "@xterm/xterm";
 import type { PyodideInterface } from "pyodide";
-import { loadPyodide } from "pyodide";
-import { Terminal } from '@xterm/xterm';
+
+// Re-export Terminal type for use throughout the file
+type Terminal = import("@xterm/xterm").Terminal;
 
 // Theme interface for full customization
 export interface PyreplTheme {
@@ -50,64 +52,64 @@ declare global {
 let pyodidePromise: Promise<PyodideInterface> | null = null;
 let consoleCodePromise: Promise<string> | null = null;
 
-let currentOutput: Terminal | null = null;
+const currentOutput: Terminal | null = null;
 
 const builtinThemes: Record<string, PyreplTheme> = {
-  'catppuccin-mocha': {
-    background: '#1e1e2e',
-    foreground: '#cdd6f4',
-    cursor: '#f5e0dc',
-    cursorAccent: '#1e1e2e',
-    selectionBackground: '#585b70',
-    black: '#45475a',
-    red: '#f38ba8',
-    green: '#a6e3a1',
-    yellow: '#f9e2af',
-    blue: '#89b4fa',
-    magenta: '#f5c2e7',
-    cyan: '#94e2d5',
-    white: '#bac2de',
-    brightBlack: '#585b70',
-    brightRed: '#f38ba8',
-    brightGreen: '#a6e3a1',
-    brightYellow: '#f9e2af',
-    brightBlue: '#89b4fa',
-    brightMagenta: '#f5c2e7',
-    brightCyan: '#94e2d5',
-    brightWhite: '#a6adc8',
-    headerBackground: '#181825',
-    headerTitle: '#6c7086',
-    shadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
+  "catppuccin-mocha": {
+    background: "#1e1e2e",
+    foreground: "#cdd6f4",
+    cursor: "#f5e0dc",
+    cursorAccent: "#1e1e2e",
+    selectionBackground: "#585b70",
+    black: "#45475a",
+    red: "#f38ba8",
+    green: "#a6e3a1",
+    yellow: "#f9e2af",
+    blue: "#89b4fa",
+    magenta: "#f5c2e7",
+    cyan: "#94e2d5",
+    white: "#bac2de",
+    brightBlack: "#585b70",
+    brightRed: "#f38ba8",
+    brightGreen: "#a6e3a1",
+    brightYellow: "#f9e2af",
+    brightBlue: "#89b4fa",
+    brightMagenta: "#f5c2e7",
+    brightCyan: "#94e2d5",
+    brightWhite: "#a6adc8",
+    headerBackground: "#181825",
+    headerTitle: "#6c7086",
+    shadow: "0 4px 24px rgba(0, 0, 0, 0.3)",
   },
-  'catppuccin-latte': {
-    background: '#eff1f5',
-    foreground: '#4c4f69',
-    cursor: '#dc8a78',
-    cursorAccent: '#eff1f5',
-    selectionBackground: '#acb0be',
-    black: '#5c5f77',
-    red: '#d20f39',
-    green: '#40a02b',
-    yellow: '#df8e1d',
-    blue: '#1e66f5',
-    magenta: '#ea76cb',
-    cyan: '#179299',
-    white: '#acb0be',
-    brightBlack: '#6c6f85',
-    brightRed: '#d20f39',
-    brightGreen: '#40a02b',
-    brightYellow: '#df8e1d',
-    brightBlue: '#1e66f5',
-    brightMagenta: '#ea76cb',
-    brightCyan: '#179299',
-    brightWhite: '#bcc0cc',
-    headerBackground: '#dce0e8',
-    headerTitle: '#8c8fa1',
-    shadow: '0 4px 24px rgba(0, 0, 0, 0.08)',
+  "catppuccin-latte": {
+    background: "#eff1f5",
+    foreground: "#4c4f69",
+    cursor: "#dc8a78",
+    cursorAccent: "#eff1f5",
+    selectionBackground: "#acb0be",
+    black: "#5c5f77",
+    red: "#d20f39",
+    green: "#40a02b",
+    yellow: "#df8e1d",
+    blue: "#1e66f5",
+    magenta: "#ea76cb",
+    cyan: "#179299",
+    white: "#acb0be",
+    brightBlack: "#6c6f85",
+    brightRed: "#d20f39",
+    brightGreen: "#40a02b",
+    brightYellow: "#df8e1d",
+    brightBlue: "#1e66f5",
+    brightMagenta: "#ea76cb",
+    brightCyan: "#179299",
+    brightWhite: "#bcc0cc",
+    headerBackground: "#dce0e8",
+    headerTitle: "#8c8fa1",
+    shadow: "0 4px 24px rgba(0, 0, 0, 0.08)",
   },
 };
 
-const defaultTheme = 'catppuccin-mocha';
+const defaultTheme = "catppuccin-mocha";
 
 // SVG icons for header buttons
 const icons = {
@@ -137,20 +139,25 @@ function parseConfig(container: HTMLElement): PyreplConfig {
   if (inlineConfig) {
     try {
       theme = JSON.parse(inlineConfig) as PyreplTheme;
-      themeName = 'custom';
+      themeName = "custom";
     } catch (e) {
-      console.warn('pyrepl-web: invalid data-theme-config JSON, falling back to default');
+      console.warn(
+        "pyrepl-web: invalid data-theme-config JSON, falling back to default",
+      );
       theme = builtinThemes[defaultTheme]!;
       themeName = defaultTheme;
     }
   } else {
     themeName = container.dataset.theme || defaultTheme;
-    theme = window.pyreplThemes?.[themeName]
-      || builtinThemes[themeName]
-      || builtinThemes[defaultTheme]!;
+    theme =
+      window.pyreplThemes?.[themeName] ||
+      builtinThemes[themeName] ||
+      builtinThemes[defaultTheme]!;
 
     if (!window.pyreplThemes?.[themeName] && !builtinThemes[themeName]) {
-      console.warn(`pyrepl-web: unknown theme "${themeName}", falling back to default`);
+      console.warn(
+        `pyrepl-web: unknown theme "${themeName}", falling back to default`,
+      );
       themeName = defaultTheme;
     }
   }
@@ -158,38 +165,42 @@ function parseConfig(container: HTMLElement): PyreplConfig {
   // Parse packages
   const packagesAttr = container.dataset.packages;
   const packages = packagesAttr
-    ? packagesAttr.split(',').map(p => p.trim()).filter(Boolean)
+    ? packagesAttr
+        .split(",")
+        .map((p) => p.trim())
+        .filter(Boolean)
     : [];
 
   return {
     theme,
     themeName,
-    showHeader: container.dataset.header !== 'false',
-    showButtons: container.dataset.buttons !== 'false',
-    title: container.dataset.title || 'python',
+    showHeader: container.dataset.header !== "false",
+    showButtons: container.dataset.buttons !== "false",
+    title: container.dataset.title || "python",
     packages,
     src: container.dataset.src || null,
-    readonly: container.dataset.readonly === 'true',
+    readonly: container.dataset.readonly === "true",
   };
 }
 
-function getPyodide(): Promise<PyodideInterface> {
-    if (!pyodidePromise) {
-        pyodidePromise = loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.1/full/",
-            stdout: (text) => {
-                if (currentOutput) {
-                    currentOutput.write(text + "\r\n");
-                }
-            },
-            stderr: (text) => {
-                if (currentOutput) {
-                    currentOutput.write(text + "\r\n");
-                }
-            },
-        });
-    }
-    return pyodidePromise;
+async function getPyodide(): Promise<PyodideInterface> {
+  if (!pyodidePromise) {
+    const { loadPyodide } = await import("pyodide");
+    pyodidePromise = loadPyodide({
+      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.1/full/",
+      stdout: (text: string) => {
+        if (currentOutput) {
+          currentOutput.write(text + "\r\n");
+        }
+      },
+      stderr: (text: string) => {
+        if (currentOutput) {
+          currentOutput.write(text + "\r\n");
+        }
+      },
+    });
+  }
+  return await pyodidePromise;
 }
 
 function getConsoleCode(): Promise<string> {
@@ -200,24 +211,24 @@ function getConsoleCode(): Promise<string> {
 }
 
 function init() {
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", setup);
-    } else {
-        setup();
-    }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setup);
+  } else {
+    setup();
+  }
 }
 
 function injectStyles() {
-  if (document.getElementById('pyrepl-styles')) return;
+  if (document.getElementById("pyrepl-styles")) return;
 
   // Inject xterm.js CSS from CDN
-  const xtermCss = document.createElement('link');
-  xtermCss.rel = 'stylesheet';
-  xtermCss.href = 'https://cdn.jsdelivr.net/npm/@xterm/xterm/css/xterm.css';
+  const xtermCss = document.createElement("link");
+  xtermCss.rel = "stylesheet";
+  xtermCss.href = "https://cdn.jsdelivr.net/npm/@xterm/xterm/css/xterm.css";
   document.head.appendChild(xtermCss);
 
-  const style = document.createElement('style');
-  style.id = 'pyrepl-styles';
+  const style = document.createElement("style");
+  style.id = "pyrepl-styles";
   style.textContent = `
     .pyrepl {
       display: inline-block;
@@ -306,170 +317,186 @@ function applyThemeVariables(container: HTMLElement, theme: PyreplTheme) {
   // Derive header background from terminal background (slightly darker/lighter)
   const headerBg = theme.headerBackground || theme.black;
   const headerTitle = theme.headerTitle || theme.brightBlack;
-  const shadow = theme.shadow || '0 4px 24px rgba(0, 0, 0, 0.3)';
+  const shadow = theme.shadow || "0 4px 24px rgba(0, 0, 0, 0.3)";
 
-  container.style.setProperty('--pyrepl-bg', theme.background);
-  container.style.setProperty('--pyrepl-header-bg', headerBg);
-  container.style.setProperty('--pyrepl-header-title', headerTitle);
-  container.style.setProperty('--pyrepl-red', theme.red);
-  container.style.setProperty('--pyrepl-yellow', theme.yellow);
-  container.style.setProperty('--pyrepl-green', theme.green);
-  container.style.setProperty('--pyrepl-shadow', shadow);
+  container.style.setProperty("--pyrepl-bg", theme.background);
+  container.style.setProperty("--pyrepl-header-bg", headerBg);
+  container.style.setProperty("--pyrepl-header-title", headerTitle);
+  container.style.setProperty("--pyrepl-red", theme.red);
+  container.style.setProperty("--pyrepl-yellow", theme.yellow);
+  container.style.setProperty("--pyrepl-green", theme.green);
+  container.style.setProperty("--pyrepl-shadow", shadow);
 }
 
 function createHeader(config: PyreplConfig): HTMLElement {
-    const header = document.createElement('div');
-    header.className = 'pyrepl-header';
-    header.innerHTML = `
+  const header = document.createElement("div");
+  header.className = "pyrepl-header";
+  header.innerHTML = `
         <div class="pyrepl-header-dots">
             <div class="pyrepl-header-dot red"></div>
             <div class="pyrepl-header-dot yellow"></div>
             <div class="pyrepl-header-dot green"></div>
         </div>
         <div class="pyrepl-header-title">${config.title}</div>
-        ${config.showButtons ? `
+        ${
+          config.showButtons
+            ? `
         <div class="pyrepl-header-buttons">
             <button class="pyrepl-header-btn" data-action="copy" title="Copy output">${icons.copy}</button>
             <button class="pyrepl-header-btn" data-action="clear" title="Clear terminal">${icons.clear}</button>
         </div>
-        ` : '<div style="width: 48px"></div>'}
+        `
+            : '<div style="width: 48px"></div>'
+        }
     `;
-    return header;
+  return header;
 }
 
 // Create terminal UI without initializing Python (fast, shows background immediately)
-function createTerminal(container: HTMLElement): { term: Terminal; config: PyreplConfig } {
-    injectStyles();
+async function createTerminal(
+  container: HTMLElement,
+): Promise<{ term: Terminal; config: PyreplConfig }> {
+  injectStyles();
 
-    const config = parseConfig(container);
+  const config = parseConfig(container);
 
-    // Apply theme CSS variables for header styling
-    applyThemeVariables(container, config.theme);
+  // Apply theme CSS variables for header styling
+  applyThemeVariables(container, config.theme);
 
-    if (config.showHeader) {
-        container.appendChild(createHeader(config));
+  if (config.showHeader) {
+    container.appendChild(createHeader(config));
+  }
+
+  // Dynamically import xterm.js only when needed
+  const XTerm = await import("@xterm/xterm");
+
+  // Create terminal container
+  const termContainer = document.createElement("div");
+  container.appendChild(termContainer);
+  const term = new XTerm.Terminal({
+    cursorBlink: !config.readonly,
+    cursorStyle: config.readonly ? "bar" : "block",
+    fontSize: 14,
+    fontFamily: "monospace",
+    theme: config.theme,
+    disableStdin: config.readonly,
+  });
+  term.open(termContainer);
+
+  return { term, config };
+}
+
+async function createRepl(
+  container: HTMLElement,
+  term: Terminal,
+  config: PyreplConfig,
+) {
+  const pyodide = await getPyodide();
+  await pyodide.loadPackage("micropip");
+
+  // Preload packages if specified
+  if (config.packages.length > 0) {
+    const micropip = pyodide.pyimport("micropip");
+    await micropip.install(config.packages);
+  }
+
+  // Show loaded message (dim gray)
+  const loadedPkgs =
+    config.packages.length > 0
+      ? ` (installed packages: ${config.packages.join(", ")})`
+      : "";
+  const infoLine = `Python 3.13${loadedPkgs}`;
+  term.write(`\x1b[90m${infoLine}\x1b[0m\r\n`);
+
+  // Expose globals to Python
+  globalThis.term = term;
+  globalThis.pyreplTheme = config.themeName;
+  globalThis.pyreplInfo = infoLine;
+  globalThis.pyreplReadonly = config.readonly;
+
+  // Pre-fetch startup script if specified (before starting REPL)
+  if (config.src) {
+    try {
+      const response = await fetch(config.src);
+      if (response.ok) {
+        globalThis.pyreplStartupScript = await response.text();
+      } else {
+        console.warn(`pyrepl-web: failed to fetch script from ${config.src}`);
+      }
+    } catch (e) {
+      console.warn(`pyrepl-web: error fetching script from ${config.src}`, e);
     }
+  }
 
-    // Create terminal container
-    const termContainer = document.createElement('div');
-    container.appendChild(termContainer);
-    const term = new Terminal({
-        cursorBlink: !config.readonly,
-        cursorStyle: config.readonly ? 'bar' : 'block',
-        fontSize: 14,
-        fontFamily: 'monospace',
-        theme: config.theme,
-        disableStdin: config.readonly,
+  // Load and start the Python REPL
+  const consoleCode = await getConsoleCode();
+  pyodide.runPython(consoleCode);
+  pyodide.runPythonAsync("await start_repl()");
+
+  // Wait for Python to set currentBrowserConsole
+  while (!(globalThis as any).currentBrowserConsole) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  const browserConsole = (globalThis as any).currentBrowserConsole;
+
+  // Clear it so next REPL can set its own
+  (globalThis as any).currentBrowserConsole = null;
+
+  // Only attach input handler if not readonly
+  if (!config.readonly) {
+    term.onData((data: string) => {
+      for (const char of data) {
+        browserConsole.push_char(char.charCodeAt(0));
+      }
     });
-    term.open(termContainer);
+  }
 
-    return { term, config };
-}
+  // Set up button handlers
+  if (config.showHeader && config.showButtons) {
+    const copyBtn = container.querySelector('[data-action="copy"]');
+    const clearBtn = container.querySelector('[data-action="clear"]');
 
-async function createRepl(container: HTMLElement, term: Terminal, config: PyreplConfig) {
-    const pyodide = await getPyodide();
-    await pyodide.loadPackage("micropip");
-
-    // Preload packages if specified
-    if (config.packages.length > 0) {
-        const micropip = pyodide.pyimport("micropip");
-        await micropip.install(config.packages);
-    }
-
-    // Show loaded message (dim gray)
-    const loadedPkgs = config.packages.length > 0 ? ` (installed packages: ${config.packages.join(', ')})` : '';
-    const infoLine = `Python 3.13${loadedPkgs}`;
-    term.write(`\x1b[90m${infoLine}\x1b[0m\r\n`);
-
-    // Expose globals to Python
-    globalThis.term = term;
-    globalThis.pyreplTheme = config.themeName;
-    globalThis.pyreplInfo = infoLine;
-    globalThis.pyreplReadonly = config.readonly;
-
-    // Pre-fetch startup script if specified (before starting REPL)
-    if (config.src) {
-        try {
-            const response = await fetch(config.src);
-            if (response.ok) {
-                globalThis.pyreplStartupScript = await response.text();
-            } else {
-                console.warn(`pyrepl-web: failed to fetch script from ${config.src}`);
-            }
-        } catch (e) {
-            console.warn(`pyrepl-web: error fetching script from ${config.src}`, e);
+    copyBtn?.addEventListener("click", () => {
+      // Get all terminal content
+      const buffer = term.buffer.active;
+      let text = "";
+      for (let i = 0; i < buffer.length; i++) {
+        const line = buffer.getLine(i);
+        if (line) {
+          text += line.translateToString(true) + "\n";
         }
-    }
+      }
+      navigator.clipboard.writeText(text.trimEnd());
+    });
 
-    // Load and start the Python REPL
-    const consoleCode = await getConsoleCode();
-    pyodide.runPython(consoleCode);
-    pyodide.runPythonAsync("await start_repl()");
-
-    // Wait for Python to set currentBrowserConsole
-    while (!(globalThis as any).currentBrowserConsole) {
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    }
-    const browserConsole = (globalThis as any).currentBrowserConsole;
-
-    // Clear it so next REPL can set its own
-    (globalThis as any).currentBrowserConsole = null;
-
-    // Only attach input handler if not readonly
-    if (!config.readonly) {
-        term.onData((data) => {
-            for (const char of data) {
-                browserConsole.push_char(char.charCodeAt(0));
-            }
-        });
-    }
-
-    // Set up button handlers
-    if (config.showHeader && config.showButtons) {
-        const copyBtn = container.querySelector('[data-action="copy"]');
-        const clearBtn = container.querySelector('[data-action="clear"]');
-
-        copyBtn?.addEventListener('click', () => {
-            // Get all terminal content
-            const buffer = term.buffer.active;
-            let text = '';
-            for (let i = 0; i < buffer.length; i++) {
-                const line = buffer.getLine(i);
-                if (line) {
-                    text += line.translateToString(true) + '\n';
-                }
-            }
-            navigator.clipboard.writeText(text.trimEnd());
-        });
-
-        clearBtn?.addEventListener('click', () => {
-            term.reset();
-            term.write(`\x1b[90m${infoLine}\x1b[0m\r\n`);
-            term.write('\x1b[32m>>> \x1b[0m');
-        });
-    }
+    clearBtn?.addEventListener("click", () => {
+      term.reset();
+      term.write(`\x1b[90m${infoLine}\x1b[0m\r\n`);
+      term.write("\x1b[32m>>> \x1b[0m");
+    });
+  }
 }
-
 
 async function setup() {
-    const containers = document.querySelectorAll<HTMLElement>(".pyrepl");
+  const containers = document.querySelectorAll<HTMLElement>(".pyrepl");
 
-    if (containers.length === 0) {
-        console.warn("pyrepl-web: no .pyrepl elements found");
-        return;
-    }
+  if (containers.length === 0) {
+    console.warn("pyrepl-web: no .pyrepl elements found");
+    return;
+  }
 
-    // Create all terminals first (fast, shows backgrounds immediately)
-    const repls = Array.from(containers).map(container => ({
-        container,
-        ...createTerminal(container)
-    }));
+  // Create all terminals first (fast, shows backgrounds immediately)
+  const repls = await Promise.all(
+    Array.from(containers).map(async (container) => ({
+      container,
+      ...(await createTerminal(container)),
+    })),
+  );
 
-    // Then initialize Python REPLs sequentially (avoids race conditions)
-    for (const { container, term, config } of repls) {
-        await createRepl(container, term, config);
-    }
+  // Then initialize Python REPLs sequentially (avoids race conditions)
+  for (const { container, term, config } of repls) {
+    await createRepl(container, term, config);
+  }
 }
 
 init();
-

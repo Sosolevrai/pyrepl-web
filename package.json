@@ -4,7 +4,7 @@
   "description": "An embeddable Python REPL powered by Pyodide",
   "main": "dist/pyrepl.js",
   "files": [
-    "dist/pyrepl.js",
+    "dist/*.js",
     "README.md"
   ],
   "scripts": {

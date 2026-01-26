@@ -126,21 +126,43 @@ async def start_repl():
     import micropip
     import rlcompleter
     import re
+    import asyncio
 
-    await micropip.install("catppuccin[pygments]")
+    # Lazy-load Pygments in background while REPL starts
+    pygments_loaded = False
+    lexer = None
+    formatter = None
 
-    from pygments import highlight
-    from pygments.lexers import Python3Lexer
-    from pygments.formatters import Terminal256Formatter
+    async def load_pygments():
+        nonlocal pygments_loaded, lexer, formatter
+        try:
+            await micropip.install("catppuccin[pygments]")
+            from pygments.lexers import Python3Lexer
+            from pygments.formatters import Terminal256Formatter
 
-    lexer = Python3Lexer()
-    formatter = Terminal256Formatter(style=theme_name)
+            lexer = Python3Lexer()
+            formatter = Terminal256Formatter(style=theme_name)
+            pygments_loaded = True
+        except Exception:
+            # Silently fail if Pygments can't load
+            pass
+
+    # Start loading Pygments in background (non-blocking)
+    asyncio.create_task(load_pygments())
 
     def syntax_highlight(code):
         if not code:
             return ""
-        result = highlight(code, lexer, formatter)
-        return result.rstrip("\n")
+        if not pygments_loaded or lexer is None or formatter is None:
+            # Return unhighlighted code until Pygments loads
+            return code
+        try:
+            from pygments import highlight
+
+            result = highlight(code, lexer, formatter)
+            return result.rstrip("\n")
+        except Exception:
+            return code
 
     class TermWriter:
         def write(self, data):

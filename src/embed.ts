@@ -187,7 +187,7 @@ async function getPyodide(): Promise<PyodideInterface> {
   if (!pyodidePromise) {
     const { loadPyodide } = await import("pyodide");
     pyodidePromise = loadPyodide({
-      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.1/full/",
+      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.29.2/full/",
       stdout: (text: string) => {
         if (currentOutput) {
           currentOutput.write(text + "\r\n");

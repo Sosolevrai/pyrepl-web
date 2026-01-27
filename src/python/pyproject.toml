@@ -7,7 +7,7 @@ requires-python = ">=3.14"
 dependencies = [
     "js>=1.0",
     "micropip>=0.11.0",
-    "pyodide-py>=0.29.1",
+    "pyodide-py>=0.29.2",
 ]
 
 [dependency-groups]

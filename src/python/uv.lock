@@ -125,11 +125,11 @@ wheels = [
 
 [[package]]
 name = "pyodide-py"
-version = "0.29.1"
+version = "0.29.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8e/72/2ce5ee03a870182911ab8b7c6fb62c2b4d9b5ac24ceedadccdf21a6c2098/pyodide_py-0.29.1.tar.gz", hash = "sha256:83776c894691ee73dc49f4dce728ea0255a346d0c8ef6c449adbec7873ab5cf8", size = 58154, upload-time = "2026-01-07T13:09:47.138Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/e7/7aa515e2f986782933afdf51bc1c4063a0ed8a37be6478ae4a9893092e8e/pyodide_py-0.29.2.tar.gz", hash = "sha256:8f9e7b3a1c3db0b4b246640795e61e31fbe0a2c1b0b297630f3e7a2f4e8300f7", size = 58733, upload-time = "2026-01-21T08:43:45.358Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/92/bffc87c99c5cd7b495759bcf7ff00d5c8f696dba1edbbe647b9098d5a533/pyodide_py-0.29.1-py3-none-any.whl", hash = "sha256:308a75893f043771b21548cafb657b9cc899a3052163cc35e9bdf039e1ed62ef", size = 65442, upload-time = "2026-01-07T13:09:46.276Z" },
+    { url = "https://files.pythonhosted.org/packages/82/58/6ae26b26a7f4733f7f3cd053cd4c33df716cc28ccd870a3515dc47cf3984/pyodide_py-0.29.2-py3-none-any.whl", hash = "sha256:031a5cfcb03a8e1ae0066b216e84df997a8055369f7a491055b723837732a174", size = 66013, upload-time = "2026-01-21T08:43:43.984Z" },
 ]
 
 [[package]]
@@ -152,7 +152,7 @@ dev = [
 requires-dist = [
     { name = "js", specifier = ">=1.0" },
     { name = "micropip", specifier = ">=0.11.0" },
-    { name = "pyodide-py", specifier = ">=0.29.1" },
+    { name = "pyodide-py", specifier = ">=0.29.2" },
 ]
 
 [package.metadata.requires-dev]

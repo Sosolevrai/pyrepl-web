@@ -5,6 +5,15 @@
   const scriptUrl = currentScript ? currentScript.src : null;
 
   if (scriptUrl) {
+    // Preload Pyodide WASM to start downloading early
+    const preload = document.createElement("link");
+    preload.rel = "preload";
+    preload.as = "fetch";
+    preload.href =
+      "https://cdn.jsdelivr.net/pyodide/v0.29.2/full/pyodide.asm.wasm";
+    preload.crossOrigin = "anonymous";
+    document.head.appendChild(preload);
+
     // Replace wrapper filename with ESM module filename
     const moduleUrl = scriptUrl.replace("pyrepl.js", "pyrepl.esm.js");
 

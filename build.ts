@@ -1,63 +1,111 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, unlinkSync, writeFileSync } from "fs";
 
-// Read the Python code and write it as a separate module
-const pythonCode = readFileSync("src/python/console.py", "utf-8");
-writeFileSync(
-  "src/console-code.ts",
-  `export const CONSOLE_PY = ${JSON.stringify(pythonCode)};`,
-);
+// Read package.json to get Pyodide version
+const pkg = JSON.parse(readFileSync("package.json", "utf-8"));
+const pyodideVersion = pkg.dependencies.pyodide.replace("^", "");
 
-// Read the TypeScript source
-const tsSource = readFileSync("src/embed.ts", "utf-8");
+// Update Python pyproject.toml with Pyodide version
+function updatePyprojectVersion() {
+  const pyprojectPath = "src/python/pyproject.toml";
+  const pyproject = readFileSync(pyprojectPath, "utf-8");
+  const updatedPyproject = pyproject.replace(
+    /pyodide-py>=[\d.]+/,
+    `pyodide-py>=${pyodideVersion}`,
+  );
+  writeFileSync(pyprojectPath, updatedPyproject);
+}
 
-// Create a version that imports the Python code
-const inlinedSource =
-  `import { CONSOLE_PY } from './console-code';\n` +
-  tsSource.replace(
-    /function getConsoleCode\(\): Promise<string> \{\s+if \(!consoleCodePromise\) \{\s+consoleCodePromise = fetch\("\/python\/console\.py"\)\.then\(\(r\) => r\.text\(\)\);\s+\}\s+return consoleCodePromise;\s+\}/,
-    `function getConsoleCode(): Promise<string> {\n  if (!consoleCodePromise) {\n    consoleCodePromise = Promise.resolve(CONSOLE_PY);\n  }\n  return consoleCodePromise;\n}`,
+// Inject Pyodide version into URLs
+function injectPyodideVersion(source: string): string {
+  return source.replace(
+    /https:\/\/cdn\.jsdelivr\.net\/pyodide\/v[\d.]+\/full\//g,
+    `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`,
+  );
+}
+
+// Prepare TypeScript source with inlined Python code
+function prepareEmbedSource(): string {
+  const pythonCode = readFileSync("src/python/console.py", "utf-8");
+  writeFileSync(
+    "src/console-code.ts",
+    `export const CONSOLE_PY = ${JSON.stringify(pythonCode)};`,
   );
 
-// Write temporary file
-writeFileSync("src/embed.build.ts", inlinedSource);
+  const tsSource = readFileSync("src/embed.ts", "utf-8");
+  return (
+    `import { CONSOLE_PY } from './console-code';\n` +
+    tsSource
+      .replace(
+        /function getConsoleCode\(\): Promise<string> \{\s+if \(!consoleCodePromise\) \{\s+consoleCodePromise = fetch\("\/python\/console\.py"\)\.then\(\(r\) => r\.text\(\)\);\s+\}\s+return consoleCodePromise;\s+\}/,
+        `function getConsoleCode(): Promise<string> {\n  if (!consoleCodePromise) {\n    consoleCodePromise = Promise.resolve(CONSOLE_PY);\n  }\n  return consoleCodePromise;\n}`,
+      )
+      .replace(
+        /https:\/\/cdn\.jsdelivr\.net\/pyodide\/v[\d.]+\/full\//g,
+        `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`,
+      )
+  );
+}
 
-// Bundle the ESM module
-const result = await Bun.build({
-  entrypoints: ["src/embed.build.ts"],
-  outdir: "dist",
-  naming: "pyrepl.esm.js",
-  minify: true,
-  splitting: true, // Enable code splitting for dynamic imports
-  target: "browser",
-  format: "esm", // Use ES modules for better tree-shaking
-});
+// Prepare wrapper source with Pyodide version
+function prepareWrapperSource(): string {
+  const wrapperSource = readFileSync("src/wrapper.js", "utf-8");
+  return injectPyodideVersion(wrapperSource);
+}
 
-if (result.success) {
+// Clean up temporary build files
+function cleanup() {
+  unlinkSync("src/embed.build.ts");
+  unlinkSync("src/wrapper.build.js");
+  unlinkSync("src/console-code.ts");
+}
+
+// Main build process
+async function build() {
+  // Update Python dependencies
+  updatePyprojectVersion();
+
+  // Prepare sources
+  const embedSource = prepareEmbedSource();
+  writeFileSync("src/embed.build.ts", embedSource);
+
+  const wrapperSource = prepareWrapperSource();
+  writeFileSync("src/wrapper.build.js", wrapperSource);
+
+  // Bundle the ESM module
+  const esmResult = await Bun.build({
+    entrypoints: ["src/embed.build.ts"],
+    outdir: "dist",
+    naming: "pyrepl.esm.js",
+    minify: true,
+    splitting: true,
+    target: "browser",
+    format: "esm",
+  });
+
+  if (!esmResult.success) {
+    console.error("ESM build failed:", esmResult.logs);
+    process.exit(1);
+  }
   console.log("Built dist/pyrepl.esm.js");
-} else {
-  console.error("Build failed:", result.logs);
-  process.exit(1);
-}
 
-// Bundle the wrapper (IIFE format, no code splitting needed)
-const wrapperResult = await Bun.build({
-  entrypoints: ["src/wrapper.js"],
-  outdir: "dist",
-  naming: "pyrepl.js",
-  minify: true,
-  target: "browser",
-  format: "iife",
-});
+  // Bundle the wrapper
+  const wrapperResult = await Bun.build({
+    entrypoints: ["src/wrapper.build.js"],
+    outdir: "dist",
+    naming: "pyrepl.js",
+    minify: true,
+    target: "browser",
+    format: "iife",
+  });
 
-if (wrapperResult.success) {
+  if (!wrapperResult.success) {
+    console.error("Wrapper build failed:", wrapperResult.logs);
+    process.exit(1);
+  }
   console.log("Built dist/pyrepl.js (wrapper)");
-} else {
-  console.error("Wrapper build failed:", wrapperResult.logs);
-  process.exit(1);
+
+  // Clean up
+  cleanup();
 }
 
-// Clean up temp files
-import { unlinkSync } from "fs";
-
-unlinkSync("src/embed.build.ts");
-unlinkSync("src/console-code.ts");
+build();

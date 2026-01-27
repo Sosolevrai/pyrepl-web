@@ -45,7 +45,7 @@ That's it! No install needed.
 Use `src` to preload a Python script that sets up the environment:
 
 ```html
-<py-repl src="/scripts/setup.py"></py-repl>
+<py-repl src="/scripts/setup.py" packages="pandas"></py-repl>
 ```
 
 The script runs silently to populate the namespace. If you define a `setup()` function, it will be called after loading and its output is visible in the terminal:

@@ -35,10 +35,34 @@ That's it! No install needed.
 | `theme` | Color theme name (builtin or registered via `window.pyreplThemes`) | `catppuccin-mocha` |
 | `packages` | Comma-separated list of PyPI packages to preload | none |
 | `repl-title` | Custom title in the header bar | `Python REPL` |
-| `src` | Path to a Python script to preload (runs silently, populates namespace) | none |
+| `src` | Path to a Python startup script (see below) | none |
 | `no-header` | Hide the header bar (boolean attribute) | not set |
 | `no-buttons` | Hide copy/clear buttons in header (boolean attribute) | not set |
 | `readonly` | Disable input, display only (boolean attribute) | not set |
+
+### Startup Scripts
+
+Use `src` to preload a Python script that sets up the environment:
+
+```html
+<py-repl src="/scripts/setup.py"></py-repl>
+```
+
+The script runs silently to populate the namespace. If you define a `setup()` function, it will be called after loading and its output is visible in the terminal:
+
+```python
+# setup.py
+import math
+
+x = 42
+
+def greet(name):
+    return f"Hello, {name}!"
+
+def setup():
+    """Called after startup - output is visible."""
+    print("Welcome! Try: print(x) or greet('your name')")
+```
 
 ### Theming
 

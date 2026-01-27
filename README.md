@@ -127,24 +127,3 @@ window.pyreplThemes = {
 };
 </script>
 ```
-
-## Development
-
-```bash
-# Install dependencies
-bun install
-
-# Run dev server
-bun run src/server.ts
-
-# Build for production
-bun run build.ts
-```
-
-## How it works
-
-pyrepl-web uses:
-- [Pyodide](https://pyodide.org/) - CPython port to WebAssembly
-- [xterm.js](https://xtermjs.org/) - Terminal emulator
-- [Pygments](https://pygments.org/) - Syntax highlighting
-- [Catppuccin](https://github.com/catppuccin/catppuccin) - Color themes

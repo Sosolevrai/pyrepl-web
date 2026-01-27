@@ -107,22 +107,6 @@ window.pyreplThemes = {
 </script>
 ```
 
-### Legacy API
-
-The legacy `<div class="pyrepl">` API is still supported for backwards compatibility:
-
-```html
-<div class="pyrepl"
-     data-theme="catppuccin-mocha"
-     data-packages="numpy"
-     data-title="My REPL"
-     data-src="/demo.py"
-     data-header="true"
-     data-buttons="true"
-     data-readonly="false">
-</div>
-```
-
 ## Development
 
 ```bash

